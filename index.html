@@ -6,25 +6,27 @@
 </head>
 <body>
 <first-element>
-    <p>loading</p>
+    loading
 </first-element>
+
 <script type="module">
     import neoan from './fw/main.js';
 
     neoan.component('first-element', {
-        template: `<p>{{some}}</p>`,
+        template: `<input type="text" data-n="some"><p>{{some}}</p>`,
         data: {
             some: 'coolio'
         },
-        render(){
-            console.log(this.data);
+        loaded(){
             setTimeout(()=>{
                 this.data.some = 'else';
-                console.log(this.data);
             },1500);
         },
-        someFunction(){
-            console.log('do');
+        updated(){
+            this.someFunction(this.elements[0])
+        },
+        someFunction(element){
+            console.log(this);
         }
     });
     // neoan.component('another')

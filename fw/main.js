@@ -3,7 +3,7 @@ import Component from './component.js';
 const Neoan =  function() {
     this.components = {};
     this.component = (name,opt = {}) => {
-        this.components[name] = true;
+        this.components[name] = [];
         return new Component(name,opt);
     };
 
