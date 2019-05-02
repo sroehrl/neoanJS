@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<first-element>
+    <p>loading</p>
+</first-element>
+<script type="module">
+    import neoan from './fw/main.js';
+
+    neoan.component('first-element', {
+        template: `<p>{{some}}</p>`,
+        data: {
+            some: 'coolio'
+        },
+        render(){
+            console.log(this.data);
+            setTimeout(()=>{
+                this.data.some = 'else';
+                console.log(this.data);
+            },1500);
+        },
+        someFunction(){
+            console.log('do');
+        }
+    });
+    // neoan.component('another')
+</script>
+</body>
+</html>
