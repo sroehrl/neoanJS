@@ -5,28 +5,40 @@
     <title>Title</title>
 </head>
 <body>
-<first-element is-template>
+<!--<first-element is-template>
     <input type="text" data-n="some"><p>{{some}}</p>
+</first-element>-->
+
+<h1>Test</h1>
+<p>render first element</p>
+<first-element is-template>
+    <form action="">
+        <input type="text" data-n="some"><p>{{some}}, <button data-click="someFunction">{{another.one}}</button></p>
+    </form>
+
 </first-element>
 
 <script type="module">
-    import neoan from './fw/main.js';
+    import neoan from './src/neoan.js';
 
     neoan.component('first-element', {
-        // template: `<input type="text" data-n="some"><p>{{some}}</p>`,
+        // template: `<input type="text" data-n="some"><p>{{some}}, <span data-click="someFunction">{{another.one}}</span></p>`,
         data: {
-            some: 'coolio'
+            some: 'coolio',
+            another: {
+                one:'reset'
+            }
         },
         loaded(){
-            /*setTimeout(()=>{
+            setTimeout(()=>{
                 this.data.some = 'else';
-            },1500);*/
+            },1500);
         },
         updated(){
-            this.someFunction(this.elements[0])
+            console.log(this.data);
         },
-        someFunction(element){
-            console.log(this);
+        someFunction(){
+            this.data.some = 'coolio';
         }
     });
     // neoan.component('another')
@@ -35,9 +47,7 @@
 
 
 
-<h1>Test</h1>
-<p>render first element</p>
-<first-element></first-element>
+
 
 
 
