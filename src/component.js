@@ -27,7 +27,7 @@ export default function Component(name, component = {}) {
     const stateObj = Object.keys(configuration.data)
         .filter(k => !helper.isFunction(configuration.data, k))
         .reduce((pV, cK) => ({...pV, [cK]: configuration.data[cK]}), {});
-    const stateArray = helper.objToFlatArray(stateObj);
+    let stateArray = helper.objToFlatArray(stateObj);
     if (elements) {
         elements.forEach((element) => {
             if (element.nodeType === 1) {
@@ -59,6 +59,7 @@ export default function Component(name, component = {}) {
         }
     }
     const rendering = function () {
+        stateArray = helper.objToFlatArray(stateObj);
         if (elements) {
             stateArray.forEach((x) => {
                 elements.forEach((element) => {
@@ -84,7 +85,7 @@ export default function Component(name, component = {}) {
                     setTimeout(() => configuration.updated.call(context[e.id]));
                 });
                 let data = proxies[e.id];
-                context[e.id] = {...methods, elements, data, rendering};
+                context[e.id] = {...methods, elements, data, directives, rendering};
             }
 
         })

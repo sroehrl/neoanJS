@@ -14,16 +14,17 @@ neoan.component('first-element', {
     data: {
         some: 'coolio',
         another: 'foo',
-        iterate: ['foo','bar']
+        iterates: ['foo','bar']
     },
     loaded() {
-        console.log(this.data);
+        console.log(this);
     },
     updated() {
-        // trigger on update
+
     },
     someFunction() {
         this.data.some = 'changed';
+        this.data.iterates.push('item-'+this.data.iterates.length);
         this.data.another = this.data.another === 'bar' ? 'foo' :'bar';
     }
 });

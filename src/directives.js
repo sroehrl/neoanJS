@@ -1,7 +1,7 @@
 import helper from "./helper.js";
-
+import rerenderer from './renderer.js';
 const Directives = function(){
-    const directives = ['Input','Click'];
+    this.registeredDirectives = ['Input','Click','For'];
     this.listeners = {};
 
     const setInputValue = (sc,ele,context) =>{
@@ -28,7 +28,7 @@ const Directives = function(){
         return element.querySelectorAll(pattern);
     };
     this.binder = (element,scope,value,context)=>{
-        directives.forEach((dir)=>{
+        this.registeredDirectives.forEach((dir)=>{
             this['directive'+dir](element,scope,value,context);
         })
     };
@@ -59,6 +59,36 @@ const Directives = function(){
             }
         });
     };
+    this.directiveFor = (element,scope,value,context)=>{
+        let deflatten = scope.split('.');
+        let last = deflatten[deflatten.length-1];
+        let target = '{{'+deflatten[0].substring(0,deflatten[0].length-1);
+        if(!isNaN(last)){
+            deflatten.pop();
+            elementIterator(element,'[data-for="'+deflatten.join('.')+'"]').forEach((ele) =>{
+                // remove all existing elements
+                Array.from(ele.children).forEach((child)=>{
+                    if(child.nodeName !== 'TEMPLATE'){
+                        ele.removeChild(child);
+                    }
+                });
+                let tmpl = ele.querySelector('template');
+                let DataCube = context.data;
+                let partString = '';
+                deflatten.forEach((part)=>{
+                    DataCube = DataCube[part];
+                    partString = part+'.';
+                });
+                DataCube.forEach((item,i)=>{
+                    let newEle = tmpl.innerHTML.replace(target,'{{'+partString+i);
+                    ele.append(document.createRange().createContextualFragment(newEle));
+                });
+            });
+        }
+        setTimeout(()=>{
+            rerenderer.process(element,scope,value);
+        })
+    }
 };
 const directives = new Directives();
 Object.freeze(directives);
