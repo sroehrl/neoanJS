@@ -9,6 +9,21 @@ let comp = neoan.component('my-button', {
 }).components;
 console.log(comp['my-button']);
 
+neoan.component('loop',{
+    template: `<ul data-for="iterates">
+            <template>
+                <li>{{iterate}}</li>
+            </template>
+            
+        </ul><button data-click="add">PLUS</button>`,
+    data:{
+        iterates: ['a','b']
+    },
+    add(){
+        this.data.iterates.push('item-'+this.data.iterates.length);
+    }
+});
+
 neoan.component('first-element', {
     // template: `<input type="text" data-n="some"><p>{{some}}, <span data-click="someFunction">{{another.one}}</span></p>`,
     data: {

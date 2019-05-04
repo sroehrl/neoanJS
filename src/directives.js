@@ -84,10 +84,11 @@ const Directives = function(){
                     ele.append(document.createRange().createContextualFragment(newEle));
                 });
             });
+            setTimeout(() => {
+                rerenderer.process(element, scope, value);
+            })
         }
-        setTimeout(()=>{
-            rerenderer.process(element,scope,value);
-        })
+
     }
 };
 const directives = new Directives();

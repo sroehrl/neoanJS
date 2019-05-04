@@ -14,18 +14,14 @@
     This element is using the "is-template" declaration
     <form action="">
         <input type="text" data-n="some">
-        <ul data-for="iterates">
-            <template>
-                <li>{{iterate}}</li>
-            </template>
 
-        </ul>
         <p>{{some}}</p>
         <p>{{another}}</p>
         <my-button data-click="someFunction">click</my-button>
     </form>
 
 </first-element>
+<loop></loop>
 <p>Using same element twice on the same dom</p>
 <my-button onclick="alert('same button, different function')"></my-button>
 
