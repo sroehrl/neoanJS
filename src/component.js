@@ -2,6 +2,7 @@ import neoan from "./neoan.js";
 import helper from "./helper.js"
 import onChange from './onchange.js';
 import directives from './directives.js';
+import renderer from './renderer.js';
 
 export default function Component(name, component = {}) {
     const blocked = ['data', 'template', 'loaded', 'updated', 'store'];
@@ -29,64 +30,68 @@ export default function Component(name, component = {}) {
     const stateArray = helper.objToFlatArray(stateObj);
     if (elements) {
         elements.forEach((element) => {
-            if(element.hasAttribute('is-template')){
-                masterTemplate = element.cloneNode(true);
-                element.style.display = 'none';
+            if (element.nodeType === 1) {
+                if (element.hasAttribute('is-template')) {
+                    masterTemplate = element.cloneNode(true);
+                    element.style.display = 'none';
+                }
+                let regId = helper.registerId('c');
+                element.id = regId;
+                this.registeredIds.push(regId);
+                neoan.components[name].push(regId);
+                if (component.template) {
+                    element.innerHTML = component.template;
+                }
             }
-            let regId = helper.registerId('c');
-            element.id = regId;
-            this.registeredIds.push(regId);
-            neoan.components[name].push(regId);
-            if (component.template) {
-                element.innerHTML = component.template;
-            }
+
         });
-        if(masterTemplate){
-            elements.forEach((e)=>{e.innerHTML = masterTemplate.innerHTML});
+
+        if (masterTemplate) {
+            elements.forEach((e, i) => {
+                if (e.innerHTML === masterTemplate.innerHTML) {
+                    e.parentNode.removeChild(e);
+                    delete elements[i];
+                } else {
+                    e.innerHTML = masterTemplate.innerHTML;
+                }
+
+            });
         }
     }
-    const bindings = {};
-
-    const rerenderElement = function (el, s) {
-        if(typeof bindings[s] === 'undefined'){
-            bindings[s] = [];
-        }
-        let currentNode = null,nodes =[], binder = `{{${s}}}`;
-        bindings[s].forEach((clone)=>{
-            let cNode = el.querySelector('[data-id="'+clone.dataset.id+'"]');
-            if(cNode !== null){
-                cNode.innerHTML = clone.innerHTML.replace(new RegExp(binder, 'g'), helper.deepFlatten(s,stateObj));
-            }
-        });
-        let xpath = "//*[contains(text(),'"+binder+"')]";
-        let find = document.evaluate(xpath, el, null, XPathResult.ANY_TYPE, null);
-        while(currentNode = find.iterateNext()){
-            nodes.push(currentNode);
-        }
-        nodes.forEach((applyNode)=>{
-            applyNode.dataset.id = helper.registerId('bind');
-            bindings[s].push(applyNode.cloneNode(true));
-            applyNode.innerHTML = applyNode.innerHTML.replace(new RegExp(binder, 'g'), helper.deepFlatten(s,stateObj));
-        });
-    };
     const rendering = function () {
         if (elements) {
             stateArray.forEach((x) => {
                 elements.forEach((element) => {
-                    rerenderElement(element, helper.firstObjectKey(x));
-                    updateDirectives(element,helper.firstObjectKey(x),helper.deepFlatten(helper.firstObjectKey(x),stateObj));
+                    if (helper.filterTemplate(element)) {
+                        renderer.process(element, helper.firstObjectKey(x),helper.deepFlatten(helper.firstObjectKey(x), stateObj));
+                        updateDirectives(element, helper.firstObjectKey(x), helper.deepFlatten(helper.firstObjectKey(x), stateObj));
+                    }
                 })
             });
         }
     };
-    const updateDirectives = (el,n,val) => {
-        directives.binder(el,n,val,context);
+    const updateDirectives = (el, n, val) => {
+        if (typeof directives.listeners[n] === 'undefined') {
+            directives.binder(el, n, val, context[el.id]);
+        }
+
     };
-    const data = onChange(stateObj, () => {
-        rendering();
-        setTimeout(() => configuration.updated.call(context));
-    });
-    const context = {...methods, elements, data, rendering};
+    const proxies = {};
+    const context = {};
+    if (elements) {
+
+        elements.forEach((e) => {
+            if (helper.filterTemplate(e)) {
+                proxies[e.id] = onChange(stateObj, () => {
+                    rendering();
+                    setTimeout(() => configuration.updated.call(context[e.id]));
+                });
+                let data = proxies[e.id];
+                context[e.id] = {...methods, elements, data, rendering};
+            }
+
+        })
+    }
 
     if (component.template) {
         let addToState = helper.embrace(component.template);
@@ -97,8 +102,17 @@ export default function Component(name, component = {}) {
         });
 
     }
-    document.addEventListener('DOMContentLoaded', () => {
+    const fireWhenDone = () => {
         rendering();
-        configuration.loaded.call(context);
-    });
+        if (elements) {
+            elements.forEach((e) => {
+                if (helper.filterTemplate(e)) {
+                    configuration.loaded.call(context[e.id]);
+                }
+            })
+        }
+    };
+
+    document.removeEventListener('DOMContentLoaded', fireWhenDone);
+    document.addEventListener('DOMContentLoaded', fireWhenDone);
 }

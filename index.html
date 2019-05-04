@@ -5,15 +5,18 @@
     <title>Title</title>
 </head>
 <body>
-<!--<first-element is-template>
-    <input type="text" data-n="some"><p>{{some}}</p>
-</first-element>-->
+
 
 <h1>Test</h1>
 <p>render first element</p>
+<first-element></first-element>
 <first-element is-template>
+    This element is using the "is-template" declaration
     <form action="">
-        <input type="text" data-n="some"><p>{{some}}, <button data-click="someFunction">{{another.one}}</button></p>
+        <input type="text" data-n="some">
+        <p>{{some}}</p>
+        <p>{{another}}</p>
+        <my-button data-click="someFunction">click</my-button>
     </form>
 
 </first-element>
@@ -21,39 +24,35 @@
 <script type="module">
     import neoan from './src/neoan.js';
 
+    let comp = neoan.component('my-button', {
+        template: `<button>nested button executes parent's function</button>`,
+        loadend() {
+            console.log('my button loaded');
+        }
+    }).components;
+    console.log(comp);
+
     neoan.component('first-element', {
         // template: `<input type="text" data-n="some"><p>{{some}}, <span data-click="someFunction">{{another.one}}</span></p>`,
         data: {
             some: 'coolio',
-            another: {
-                one:'reset'
-            }
+            another: 'foo',
+            iterate: ['foo','bar']
         },
-        loaded(){
-            setTimeout(()=>{
-                this.data.some = 'else';
-            },1500);
+        loaded() {
+            setTimeout(() => {
+                console.log(this.data);
+            }, 1500);
         },
-        updated(){
-            console.log(this.data);
+        updated() {
+            console.log(this);
         },
-        someFunction(){
-            this.data.some = 'coolio';
+        someFunction() {
+            this.data.another = this.data.another == 'bar' ? 'foo' :'bar';
         }
     });
-    // neoan.component('another')
+
 </script>
-
-
-
-
-
-
-
-
-
-
-
 
 
 </body>
