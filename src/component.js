@@ -71,10 +71,7 @@ export default function Component(name, component = {}) {
         }
     };
     const updateDirectives = (el, n, val) => {
-        if (typeof directives.listeners[n] === 'undefined') {
-            directives.binder(el, n, val, context[el.id]);
-        }
-
+        directives.binder(el, n, val, context[el.id]);
     };
     const proxies = {};
     const context = {};

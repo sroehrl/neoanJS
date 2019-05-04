@@ -1,4 +1,6 @@
 import neoan from '../src/neoan.js';
+
+
 let comp = neoan.component('my-button', {
     template: `<button>nested button executes parent's function</button>`,
     loaded() {
@@ -21,6 +23,7 @@ neoan.component('first-element', {
         // trigger on update
     },
     someFunction() {
+        this.data.some = 'changed';
         this.data.another = this.data.another === 'bar' ? 'foo' :'bar';
     }
 });

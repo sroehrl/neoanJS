@@ -48,10 +48,13 @@ const Directives = function(){
     this.directiveInput = (element,scope,value,context)=>{
         elementIterator(element,'[data-n="'+scope+'"]').forEach((ele)=>{
             if(ele.nodeName === 'INPUT'|| ele.nodeName === 'TEXTAREA'){
-                ele.setAttribute('value',value);
+                ele.value = value;
                 provideWithId(ele);
                 if(this.checkListener(scope,ele)){
                     ele.addEventListener('input',(ev) =>setInputValue(scope,ele,context));
+                    ele.addEventListener('change',(ev) =>{
+                        ele.value = context.data[scope];
+                    });
                 }
             }
         });
