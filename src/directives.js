@@ -1,27 +1,29 @@
+import helper from "./helper.js";
+
 const Directives = function(){
     const directives = ['Input','Click'];
-    const listeners = {};
+    this.listeners = {};
 
     const setInputValue = (sc,ele,context) =>{
         context.data[sc] = ele.value;
     };
-
-    const checkListener = function(sc,ele,context){
-        if(typeof listeners[sc] === 'undefined'){
-            listeners[sc] = [];
-        }
-        if(listeners[sc].filter((node)=>{return node === ele}).length<1){
-            listeners[sc].push(ele);
-            if(ele.nodeName === 'INPUT' || ele.nodeName === 'TEXTAREA'){
-                ele.addEventListener('input',(ev) =>setInputValue(sc,ele,context));
-                ele.addEventListener('blur',(ev) =>{
-                    delete listeners[sc];
-                    ele.removeEventListener('input',(ev)=>setInputValue(sc,ele,context));
-                    console.log('TODO: event-binding lost after "dirty"')
-                });
-            }
+    const provideWithId = (el) =>{
+        if(!el.hasAttribute('id')){
+            el.id = helper.registerId('click');
         }
     };
+
+    this.checkListener = function(sc,ele){
+        if(typeof this.listeners[sc] === 'undefined'){
+            this.listeners[sc] = [];
+        }
+        let res = this.listeners[sc].filter((s)=>{return s.id === ele.id}).length<1;
+        if(res){
+            this.listeners[sc].push({id:ele.id,node:ele});
+        }
+        return res;
+    };
+
     const elementIterator = (element,pattern)=>{
         return element.querySelectorAll(pattern);
     };
@@ -32,19 +34,29 @@ const Directives = function(){
     };
     this.directiveClick = (element,scope,value,context)=>{
         elementIterator(element,'[data-click]').forEach((ele)=>{
-            ele.addEventListener('click',(ev) =>{
+            let handler = (ev) =>{
+                ev.preventDefault();
+                ev.stopPropagation();
                 context[ele.dataset.click].call(context);
-            });
+            };
+            provideWithId(ele);
+            if(this.checkListener(ele.id,ele)){
+                ele.addEventListener('click',handler);
+            }
         });
     };
     this.directiveInput = (element,scope,value,context)=>{
         elementIterator(element,'[data-n="'+scope+'"]').forEach((ele)=>{
-            if(ele.nodeName === 'INPUT'){
+            if(ele.nodeName === 'INPUT'|| ele.nodeName === 'TEXTAREA'){
                 ele.setAttribute('value',value);
-                checkListener(scope,ele,context);
+                provideWithId(ele);
+                if(this.checkListener(scope,ele)){
+                    ele.addEventListener('input',(ev) =>setInputValue(scope,ele,context));
+                }
             }
         });
     };
 };
 const directives = new Directives();
+Object.freeze(directives);
 export default directives;

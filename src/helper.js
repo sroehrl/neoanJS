@@ -5,6 +5,7 @@ const Helper = function () {
         return matches ? matches.map((m) => m.substring(2, m.length - 2)) : [];
     };
     this.computeState = (key, fn) => state => state[key] = fn({...state});
+    this.filterTemplate = (ele) => { return !ele.hasAttribute('is-template')};
     this.registerId = (entityType) =>{return 'neoan-'+entityType+'-'+Math.random().toString(36).substring(7)};
     this.firstObjectKey = (obj)=> {return Object.keys(obj)[0]};
     this.objToFlatArray = (obj) =>{
