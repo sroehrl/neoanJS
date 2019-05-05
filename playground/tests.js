@@ -11,16 +11,21 @@ console.log(comp['my-button']);
 
 neoan.component('loop',{
     template: `<ul data-for="iterates">
-            <template>
-                <li>{{iterate}}</li>
-            </template>
-            
-        </ul><button data-click="add">PLUS</button>`,
+            <li>{{iterate.bu}}</li>
+        </ul><button data-click="add">{{other}}</button><button data-click="delete">x</button>`,
     data:{
-        iterates: ['a','b']
+        iterates: [{bu:'test'},{bu:'second'}],
+        other:'add'
+    },
+    updated(){
+        setTimeout(()=>{this.add()},1000);
+    },
+    delete(){
+        this.data.iterates.splice(this.data.iterates.length-2,1);
+        this.rendering();
     },
     add(){
-        this.data.iterates.push('item-'+this.data.iterates.length);
+        this.data.iterates.push({bu:'item-'+Math.random().toString(36).substring(7)});
     }
 });
 
@@ -29,7 +34,6 @@ neoan.component('first-element', {
     data: {
         some: 'coolio',
         another: 'foo',
-        iterates: ['foo','bar']
     },
     loaded() {
         console.log(this);
@@ -39,7 +43,6 @@ neoan.component('first-element', {
     },
     someFunction() {
         this.data.some = 'changed';
-        this.data.iterates.push('item-'+this.data.iterates.length);
         this.data.another = this.data.another === 'bar' ? 'foo' :'bar';
     }
 });

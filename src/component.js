@@ -64,8 +64,8 @@ export default function Component(name, component = {}) {
             stateArray.forEach((x) => {
                 elements.forEach((element) => {
                     if (helper.filterTemplate(element)) {
+                        updateDirectives(element, helper.firstObjectKey(x), helper.deepFlatten(helper.firstObjectKey(x), stateObj))
                         renderer.process(element, helper.firstObjectKey(x),helper.deepFlatten(helper.firstObjectKey(x), stateObj));
-                        updateDirectives(element, helper.firstObjectKey(x), helper.deepFlatten(helper.firstObjectKey(x), stateObj));
                     }
                 })
             });
@@ -77,7 +77,6 @@ export default function Component(name, component = {}) {
     const proxies = {};
     const context = {};
     if (elements) {
-
         elements.forEach((e) => {
             if (helper.filterTemplate(e)) {
                 proxies[e.id] = onChange(stateObj, () => {
@@ -87,7 +86,6 @@ export default function Component(name, component = {}) {
                 let data = proxies[e.id];
                 context[e.id] = {...methods, elements, data, directives, rendering};
             }
-
         })
     }
 
