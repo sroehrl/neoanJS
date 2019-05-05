@@ -18,7 +18,7 @@ neoan.component('loop',{
         other:'add'
     },
     updated(){
-        setTimeout(()=>{this.add()},1000);
+
     },
     delete(){
         this.data.iterates.splice(this.data.iterates.length-2,1);
