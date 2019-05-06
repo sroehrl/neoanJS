@@ -64,10 +64,11 @@ export default function Component(name, component = {}) {
         .reduce((pV, cK) => ({...pV, [cK]: configuration.data[cK]}), {});
     let stateArray = helper.objToFlatArray(stateObj);
 
-    const slotting = function(element){
-        component.template = helper.slotEmbrace(component.template,slots);
-        addToState(component.template,true);
-        element.innerHTML = component.template;
+    const slotting = function(element,template){
+
+        template = helper.slotEmbrace(template,slots);
+        addToState(template,true);
+        element.innerHTML = template;
     };
 
     if (elements) {
@@ -100,7 +101,7 @@ export default function Component(name, component = {}) {
         });
         if (component.template) {
             elements.forEach((e)=>{
-                slotting(e)
+                slotting(e,component.template)
             })
         }
         // cleanup
@@ -109,7 +110,7 @@ export default function Component(name, component = {}) {
                 e.parentNode.removeChild(e);
                 delete elements[i];
             } else if(masterTemplate){
-                e.innerHTML = masterTemplate.innerHTML;
+                slotting(e,masterTemplate.innerHTML)
             }
         });
     }
@@ -117,6 +118,8 @@ export default function Component(name, component = {}) {
 
     const fireWhenDone = () => {
         rendering();
+        let html = document.querySelector('html');
+        html.style.visibility = 'visible';
         if (elements) {
             elements.forEach((e) => {
                 if (helper.filterTemplate(e)) {

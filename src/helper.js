@@ -5,7 +5,7 @@ const Helper = function () {
         return matches ? matches.map((m) => m.substring(2, m.length - 2)) : [];
     };
     this.slotEmbrace = (template,slots) =>{
-        return  template.replace(/\[\[[a-z0-9\.]+\]\]/im, (hit)=>{
+        return  template.replace(/\[\[[a-z0-9\.]+\]\]/img, (hit)=>{
             return slots[hit.substring(2,hit.length-2)] || ''
         });
     };
