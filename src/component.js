@@ -18,6 +18,21 @@ export default function Component(name, component = {}) {
         },
         ...component
     };
+    const addToState = function(ele,isString=false){
+        if(!isString){
+            ele = ele.innerHTML;
+        }
+        let addToState = helper.embrace(ele);
+        let binds = document.createRange().createContextualFragment(ele).querySelectorAll('[data-bind]');
+        binds.forEach((bind)=>{
+            addToState.push(bind.dataset.bind);
+        });
+        addToState.forEach((match) => {
+            if (typeof stateObj[match] === 'undefined') {
+                stateObj[match] = '';
+            }
+        });
+    };
     const rendering = function () {
         stateArray = helper.objToFlatArray(stateObj);
         if (elements) {
@@ -51,6 +66,7 @@ export default function Component(name, component = {}) {
             if (element.nodeType === 1) {
                 if (element.hasAttribute('is-template')) {
                     masterTemplate = element.cloneNode(true);
+                    addToState(element);
                     element.style.display = 'none';
                 }
                 let regId = helper.registerId(name);
@@ -82,42 +98,13 @@ export default function Component(name, component = {}) {
                 } else {
                     e.innerHTML = masterTemplate.innerHTML;
                 }
-
             });
         }
     }
-
-
-   /* if (elements) {
-        elements.forEach((e) => {
-            if (helper.filterTemplate(e)) {
-                // add provided scope
-                if(typeof e.dataset.provide !== 'undefined'){
-                    /!*
-                    * TODO: FIND parent's proxy*!/
-                    console.log(e.parentNode);
-                    // stateObj.concat(e.dataset.value);
-                }
-                proxies[e.id] = onChange(stateObj, () => {
-
-                    rendering();
-                    setTimeout(() => configuration.updated.call(context[e.id]));
-                });
-                let data = proxies[e.id];
-                context[e.id] = {...methods, elements, data, rendering};
-            }
-        })
-    }*/
-
     if (component.template) {
-        let addToState = helper.embrace(component.template);
-        addToState.forEach((match) => {
-            if (typeof stateObj[match] === 'undefined') {
-                stateObj[match] = '';
-            }
-        });
-
+        addToState(component.template,true);
     }
+
     const fireWhenDone = () => {
         rendering();
         if (elements) {
