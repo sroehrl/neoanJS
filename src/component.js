@@ -113,7 +113,7 @@ export default function Component(name, component = {}) {
                     // neoan.components[helper.kebabToCamel(name)].push({...methods, name, elements, data, rendering});
                     neoan.components[helper.kebabToCamel(name)].push({
                         id:regId,
-                        proxy:data,
+                        data:data,
                         ...methods
                     });
                 }
