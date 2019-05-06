@@ -4,6 +4,11 @@ const Helper = function () {
         let matches = template.match(/{{[a-z0-9\.]+}}/im);
         return matches ? matches.map((m) => m.substring(2, m.length - 2)) : [];
     };
+    this.slotEmbrace = (template,slots) =>{
+        return  template.replace(/\[\[[a-z0-9\.]+\]\]/im, (hit)=>{
+            return slots[hit.substring(2,hit.length-2)]
+        });
+    };
     this.computeState = (key, fn) => state => state[key] = fn({...state});
     this.filterTemplate = (ele) => {
         return !ele.hasAttribute('is-template')

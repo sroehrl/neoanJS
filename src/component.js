@@ -6,6 +6,7 @@ import renderer from './renderer.js';
 
 export default function Component(name, component = {}) {
     const blocked = ['data', 'template', 'loaded', 'updated', 'store'];
+    const slots = {};
     const proxies = {};
     const context = {};
     let masterTemplate = null;
@@ -33,6 +34,7 @@ export default function Component(name, component = {}) {
             }
         });
     };
+
     const rendering = function () {
         stateArray = helper.objToFlatArray(stateObj);
         if (elements) {
@@ -61,6 +63,15 @@ export default function Component(name, component = {}) {
         .filter(k => !helper.isFunction(configuration.data, k))
         .reduce((pV, cK) => ({...pV, [cK]: configuration.data[cK]}), {});
     let stateArray = helper.objToFlatArray(stateObj);
+
+    const slotting = function(element){
+        if(Object.keys(slots).length){
+            component.template = helper.slotEmbrace(component.template,slots);
+        }
+        addToState(component.template,true);
+        element.innerHTML = component.template;
+    };
+
     if (elements) {
         elements.forEach((element) => {
             if (element.nodeType === 1) {
@@ -69,12 +80,15 @@ export default function Component(name, component = {}) {
                     addToState(element);
                     element.style.display = 'none';
                 }
+                if (element.hasAttribute('is-slot')) {
+                    slots[element.getAttribute('is-slot')] = element.innerHTML;
+                }
                 let regId = helper.registerId(name);
                 element.id = regId;
                 this.registeredIds.push(regId);
 
                 if (component.template) {
-                    element.innerHTML = component.template;
+                    slotting(element)
                 }
                 if (helper.filterTemplate(element)) {
                     proxies[element.id] = onChange(stateObj, () => {
@@ -89,7 +103,11 @@ export default function Component(name, component = {}) {
             }
 
         });
-
+        if (component.template) {
+            elements.forEach((e)=>{
+                slotting(e)
+            })
+        }
         if (masterTemplate) {
             elements.forEach((e, i) => {
                 if (e.innerHTML === masterTemplate.innerHTML) {
@@ -101,9 +119,7 @@ export default function Component(name, component = {}) {
             });
         }
     }
-    if (component.template) {
-        addToState(component.template,true);
-    }
+
 
     const fireWhenDone = () => {
         rendering();
