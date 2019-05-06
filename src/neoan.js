@@ -1,9 +1,10 @@
 import Component from './component.js';
+import helper from "./helper.js";
 
 const Neoan =  function() {
     this.components = {};
     this.component = (name,opt = {}) => {
-        this.components[name] = [];
+        this.components[helper.kebabToCamel(name)] = [];
         new Component(name,opt);
         return this;
     };

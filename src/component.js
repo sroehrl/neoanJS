@@ -5,20 +5,29 @@ import directives from './directives.js';
 import renderer from './renderer.js';
 
 export default function Component(name, component = {}) {
-    const blocked = ['data', 'template', 'loaded', 'updated', 'store'];
+    const blocked = ['data', 'template', 'loaded', 'updated', 'store','name'];
     const slots = {};
     const proxies = {};
     const context = {};
     let masterTemplate = null;
     const configuration = {
+        name:helper.kebabToCamel(name),
         data: {},
         template: null,
         loaded: () => {
         },
         updated: () => {
         },
-        ...component
     };
+    Object.keys(component).forEach((given)=>{
+        if(blocked.includes(given)){
+            configuration[given] = component[given];
+        } else {
+            configuration[helper.kebabToCamel(name+'-'+given)] = component[given];
+        }
+
+    });
+    /*TODO: add deeper dynamic objects*/
     const addToState = function(ele,id=false){
         if(ele instanceof HTMLElement){
             ele = ele.innerHTML;
@@ -31,7 +40,6 @@ export default function Component(name, component = {}) {
         addToState.forEach((match) => {
             if (typeof stateObj[match] === 'undefined') {
                 stateObj[match] = '';
-
             }
             if(id && typeof stateObjs[id][match] === 'undefined'){
                 stateObjs[id][match] = '';
@@ -101,8 +109,13 @@ export default function Component(name, component = {}) {
                         setTimeout(() => configuration.updated.call(context[element.id]));
                     });
                     let data = proxies[element.id];
-                    context[element.id] = {...methods, elements, data, rendering};
-                    neoan.components[name].push({id:regId, proxy:data});
+                    context[element.id] = {...methods, name, elements, data, rendering};
+                    // neoan.components[helper.kebabToCamel(name)].push({...methods, name, elements, data, rendering});
+                    neoan.components[helper.kebabToCamel(name)].push({
+                        id:regId,
+                        proxy:data,
+                        ...methods
+                    });
                 }
             }
 

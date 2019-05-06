@@ -10,10 +10,12 @@ const Directives = function () {
     const setInputValue = (sc, ele, context) => {
         context.data[sc] = ele.value;
     };
-    const provideWithId = (el) => {
+    const provideWithId = (el, type) => {
         if (!el.hasAttribute('id')) {
-            el.id = helper.registerId('click');
+            el.id = helper.registerId(type);
+            return true;
         }
+        return false;
     };
 
     this.checkListener = function (sc, ele) {
@@ -37,32 +39,66 @@ const Directives = function () {
             this['directive' + dir](element, scope, value, context);
         })
     };
-    this.directiveProvide = (element, scope, value, context)=>{
+    this.directiveProvide = (element, scope, value, context) => {
         elementIterator(element, '[data-provide]').forEach((ele) => {
-            let candidate = neoan.components[ele.tagName.toLowerCase()].filter((e)=>{return e.id === ele.id});
-            if(candidate.length>0){
-                candidate[0].proxy._parent = helper.deepFlatten(ele.dataset.provide,context.data)
+            let candidate = neoan.components[helper.kebabToCamel(ele.tagName.toLowerCase())].filter((e) => {
+                return e.id === ele.id
+            });
+            if (candidate.length > 0) {
+                candidate[0].proxy._parent = helper.deepFlatten(ele.dataset.provide, context.data)
             }
         });
     };
     this.directiveClick = (element, scope, value, context) => {
         elementIterator(element, '[data-click]').forEach((ele) => {
-            let handler = (ev) => {
-                ev.preventDefault();
-                ev.stopPropagation();
-                context[ele.dataset.click].call(context);
-            };
-            provideWithId(ele);
-            if (this.checkListener(ele.id, ele)) {
-                ele.addEventListener('click', handler);
+
+            let rawCall = ele.dataset.click.split(':');
+            let call = '';
+            if (rawCall.length < 2) {
+                call = helper.kebabToCamel(context.name + '-' + rawCall.join('-'));
+                if (typeof context[call] !== 'undefined') {
+                    let handler = (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        context[call].call(context);
+                    };
+                    provideWithId(ele, 'click');
+                    if (this.checkListener(ele.id, ele)) {
+                        ele.addEventListener('click', handler);
+                    }
+                }
+            } else {
+                let targets = neoan.components[rawCall[0]];
+                if (targets.length > 0) {
+                    targets.forEach((target) => {
+                        call = helper.kebabToCamel(rawCall.join('-'));
+                        if (typeof target[call] !== 'undefined') {
+                            let handler = (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                target[call].call(context);
+                            };
+                            provideWithId(ele, 'click');
+                            if (this.checkListener(ele.id, ele)) {
+                                ele.addEventListener('click', handler);
+                            }
+                        }
+                    })
+                }
+
             }
+
+
         });
     };
     this.directiveInput = (element, scope, value, context) => {
         elementIterator(element, '[data-bind="' + scope + '"]').forEach((ele) => {
             if (ele.nodeName === 'INPUT' || ele.nodeName === 'TEXTAREA') {
-                ele.value = value;
-                provideWithId(ele);
+                if (value.trim() !== '') {
+                    ele.value = value;
+                }
+
+                provideWithId(ele, 'input');
                 if (this.checkListener(scope, ele)) {
                     ele.addEventListener('input', (ev) => setInputValue(scope, ele, context));
                     ele.addEventListener('change', (ev) => {
@@ -86,8 +122,8 @@ const Directives = function () {
                 };
                 this.dirty[iterator.dataset.for].data.forEach((item, i) => {
                     this.dirty[iterator.dataset.for].dirtyCheck[i] = {
-                        id:helper.registerId('item-'+i),
-                        content:Object.assign({}, item)
+                        id: helper.registerId('item-' + i),
+                        content: Object.assign({}, item)
                     };
                 });
                 // remove
@@ -103,9 +139,9 @@ const Directives = function () {
                 this.dirty[iterator.dataset.for].data.forEach((item, i) => {
                     if (typeof this.dirty[iterator.dataset.for].dirtyCheck[i] === 'undefined') {
                         initial = true;
-                        this.dirty[iterator.dataset.for].dirtyCheck[i] ={
-                            id:helper.registerId('item-'+i),
-                            content:Object.assign({}, item)
+                        this.dirty[iterator.dataset.for].dirtyCheck[i] = {
+                            id: helper.registerId('item-' + i),
+                            content: Object.assign({}, item)
                         };
                     }
                     let unChanged = helper.compareObjects(
@@ -114,7 +150,7 @@ const Directives = function () {
 
                     if (initial || !unChanged) {
                         if (!unChanged) {
-                            elementIterator(iterator,'[data-item-id="'+this.dirty[iterator.dataset.for].dirtyCheck[i].id+'"]').forEach((child)=>{
+                            elementIterator(iterator, '[data-item-id="' + this.dirty[iterator.dataset.for].dirtyCheck[i].id + '"]').forEach((child) => {
                                 iterator.removeChild(child);
                             })
 
@@ -129,11 +165,11 @@ const Directives = function () {
                             .replace('{{' + declaration + '}}', val));
 
                         iterator.append(node);
-                        Array.from(iterator.children).forEach((child,k) => {
-                            if(k === Array.from(iterator.children).length-1){
+                        Array.from(iterator.children).forEach((child, k) => {
+                            if (k === Array.from(iterator.children).length - 1) {
                                 child.dataset.itemId = this.dirty[iterator.dataset.for].dirtyCheck[i].id;
                             }
-                            if(k>i){
+                            if (k > i) {
                                 iterator.removeChild(child);
                                 delete this.dirty[iterator.dataset.for].dirtyCheck[i];
                             }
