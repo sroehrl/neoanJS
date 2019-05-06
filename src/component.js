@@ -115,7 +115,9 @@ export default function Component(name, component = {}) {
         // cleanup
         elements.forEach((e, i) => {
             if(e.hasAttribute('is-slot') || e.hasAttribute('is-template')){
-                e.parentNode.removeChild(e);
+                if(e.parentNode){
+                    e.parentNode.removeChild(e);
+                }
                 delete elements[i];
             } else if(masterTemplate){
                 slotting(e,masterTemplate.innerHTML,e.id)
