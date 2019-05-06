@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Playground</title>
 </head>
 <body>
 
@@ -13,11 +13,13 @@
 <first-element is-template>
     This element is using the "is-template" declaration
     <form action="">
-        <input type="text" data-n="some">
+        <input type="text" data-bind="some">
 
         <p>{{some}}</p>
         <p>{{another}}</p>
-        <my-button data-click="someFunction">click</my-button>
+        <my-button data-click="someFunction" data-provide="testing" >
+
+        </my-button>
     </form>
 
 </first-element>

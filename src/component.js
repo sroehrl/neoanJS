@@ -6,6 +6,8 @@ import renderer from './renderer.js';
 
 export default function Component(name, component = {}) {
     const blocked = ['data', 'template', 'loaded', 'updated', 'store'];
+    const proxies = {};
+    const context = {};
     let masterTemplate = null;
     const configuration = {
         data: {},
@@ -15,6 +17,22 @@ export default function Component(name, component = {}) {
         updated: () => {
         },
         ...component
+    };
+    const rendering = function () {
+        stateArray = helper.objToFlatArray(stateObj);
+        if (elements) {
+            stateArray.forEach((x) => {
+                elements.forEach((element) => {
+                    if (helper.filterTemplate(element)) {
+                        updateDirectives(element, helper.firstObjectKey(x), helper.deepFlatten(helper.firstObjectKey(x), stateObj));
+                        renderer.process(element, helper.firstObjectKey(x),helper.deepFlatten(helper.firstObjectKey(x), stateObj));
+                    }
+                })
+            });
+        }
+    };
+    const updateDirectives = (el, n, val) => {
+        directives.binder(el, n, val, context[el.id],proxies);
     };
 
     const elements = document.querySelectorAll(name);
@@ -35,12 +53,22 @@ export default function Component(name, component = {}) {
                     masterTemplate = element.cloneNode(true);
                     element.style.display = 'none';
                 }
-                let regId = helper.registerId('c');
+                let regId = helper.registerId(name);
                 element.id = regId;
                 this.registeredIds.push(regId);
-                neoan.components[name].push(regId);
+
                 if (component.template) {
                     element.innerHTML = component.template;
+                }
+                if (helper.filterTemplate(element)) {
+                    proxies[element.id] = onChange(stateObj, () => {
+
+                        rendering();
+                        setTimeout(() => configuration.updated.call(context[element.id]));
+                    });
+                    let data = proxies[element.id];
+                    context[element.id] = {...methods, elements, data, rendering};
+                    neoan.components[name].push({id:regId, proxy:data});
                 }
             }
 
@@ -58,36 +86,28 @@ export default function Component(name, component = {}) {
             });
         }
     }
-    const rendering = function () {
-        stateArray = helper.objToFlatArray(stateObj);
-        if (elements) {
-            stateArray.forEach((x) => {
-                elements.forEach((element) => {
-                    if (helper.filterTemplate(element)) {
-                        updateDirectives(element, helper.firstObjectKey(x), helper.deepFlatten(helper.firstObjectKey(x), stateObj))
-                        renderer.process(element, helper.firstObjectKey(x),helper.deepFlatten(helper.firstObjectKey(x), stateObj));
-                    }
-                })
-            });
-        }
-    };
-    const updateDirectives = (el, n, val) => {
-        directives.binder(el, n, val, context[el.id]);
-    };
-    const proxies = {};
-    const context = {};
-    if (elements) {
+
+
+   /* if (elements) {
         elements.forEach((e) => {
             if (helper.filterTemplate(e)) {
+                // add provided scope
+                if(typeof e.dataset.provide !== 'undefined'){
+                    /!*
+                    * TODO: FIND parent's proxy*!/
+                    console.log(e.parentNode);
+                    // stateObj.concat(e.dataset.value);
+                }
                 proxies[e.id] = onChange(stateObj, () => {
+
                     rendering();
                     setTimeout(() => configuration.updated.call(context[e.id]));
                 });
                 let data = proxies[e.id];
-                context[e.id] = {...methods, elements, data, directives, rendering};
+                context[e.id] = {...methods, elements, data, rendering};
             }
         })
-    }
+    }*/
 
     if (component.template) {
         let addToState = helper.embrace(component.template);

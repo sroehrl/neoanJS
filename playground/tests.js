@@ -3,13 +3,21 @@ import neoan from '../src/neoan.js';
 
 let comp = neoan.component('my-button', {
     template: `<button>nested button executes parent's function</button>`,
+    data:{
+        key:'val'
+    },
     loaded() {
         console.log('my button loaded');
+        console.log(this.data);
+        setTimeout(()=>this.data.update = true,1000);
+    },
+    updated(){
+        console.log(this.data._parent);
     }
 }).components;
-console.log(comp['my-button']);
+console.log(comp);
 
-neoan.component('loop',{
+let loop = neoan.component('loop',{
     template: `<ul data-for="iterates">
             <li>{{iterate.bu}}</li>
         </ul><button data-click="add">{{other}}</button><button data-click="delete">x</button>`,
@@ -28,12 +36,16 @@ neoan.component('loop',{
         this.data.iterates.push({bu:'item-'+Math.random().toString(36).substring(7)});
     }
 });
+console.log(loop.components);
 
 neoan.component('first-element', {
     // template: `<input type="text" data-n="some"><p>{{some}}, <span data-click="someFunction">{{another.one}}</span></p>`,
     data: {
         some: 'coolio',
         another: 'foo',
+        testing: {
+            given:'value'
+        }
     },
     loaded() {
         console.log(this);

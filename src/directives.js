@@ -1,8 +1,9 @@
 import helper from "./helper.js";
 import rerenderer from './renderer.js';
+import neoan from './neoan.js';
 
 const Directives = function () {
-    this.registeredDirectives = ['Input', 'Click', 'For'];
+    this.registeredDirectives = ['Input', 'Click', 'For', 'Provide'];
     this.listeners = {};
     this.dirty = {};
 
@@ -36,6 +37,14 @@ const Directives = function () {
             this['directive' + dir](element, scope, value, context);
         })
     };
+    this.directiveProvide = (element, scope, value, context)=>{
+        elementIterator(element, '[data-provide]').forEach((ele) => {
+            let candidate = neoan.components[ele.tagName.toLowerCase()].filter((e)=>{return e.id === ele.id});
+            if(candidate.length>0){
+                candidate[0].proxy._parent = helper.deepFlatten(ele.dataset.provide,context.data)
+            }
+        });
+    };
     this.directiveClick = (element, scope, value, context) => {
         elementIterator(element, '[data-click]').forEach((ele) => {
             let handler = (ev) => {
@@ -50,7 +59,7 @@ const Directives = function () {
         });
     };
     this.directiveInput = (element, scope, value, context) => {
-        elementIterator(element, '[data-n="' + scope + '"]').forEach((ele) => {
+        elementIterator(element, '[data-bind="' + scope + '"]').forEach((ele) => {
             if (ele.nodeName === 'INPUT' || ele.nodeName === 'TEXTAREA') {
                 ele.value = value;
                 provideWithId(ele);
@@ -137,46 +146,6 @@ const Directives = function () {
             })
 
         });
-
-        /*
-                let deflatten = scope.split('.');
-                let last = deflatten[deflatten.length-1];
-                let target = deflatten[0].substring(0,deflatten[0].length-1);
-                if(!isNaN(last)){
-                    deflatten.pop();
-                    let targetElement = deflatten.join('.');
-                    console.log(element);
-                    console.log(targetElement);
-                    console.log(elementIterator(element,'[data-for="'+targetElement+'"]'));
-                    elementIterator(element,'[data-for="'+targetElement+'"]').forEach((ele) =>{
-                        console.log('in');
-                        // remove all existing elements
-                        Array.from(ele.children).forEach((child)=>{
-                            if(child.nodeName !== 'TEMPLATE'){
-                                ele.removeChild(child);
-                            }
-                        });
-                        let tmpl = ele.querySelector('template');
-                        let DataCube = helper.objToFlatArray(context.data[deflatten[0]]);
-                        console.log(helper.firstObjectKey(target));
-                        console.log(DataCube);
-                        /!*let partString = '';
-                        deflatten.forEach((part)=>{
-                            DataCube = DataCube[part];
-                            partString = part+'.';
-                        });
-                        console.log(partString);*!/
-                        DataCube.forEach((item,i)=>{
-                            let newEle = tmpl.innerHTML.replace(target,'{{'+item+i);
-                            let el = document.createRange().createContextualFragment(newEle);
-                            ele.append(el);
-                        });
-                    });
-
-                }
-                setTimeout(() => {
-                    rerenderer.process(element, scope, value);
-                })*/
     }
 };
 const directives = new Directives();
