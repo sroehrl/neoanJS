@@ -6,12 +6,12 @@ const Helper = function () {
     };
     this.slotEmbrace = (template,slots) =>{
         return  template.replace(/\[\[[a-z0-9\.]+\]\]/im, (hit)=>{
-            return slots[hit.substring(2,hit.length-2)]
+            return slots[hit.substring(2,hit.length-2)] || ''
         });
     };
     this.computeState = (key, fn) => state => state[key] = fn({...state});
     this.filterTemplate = (ele) => {
-        return !ele.hasAttribute('is-template')
+        return !ele.hasAttribute('is-template')&&!ele.hasAttribute('is-slot')
     };
     this.registerId = (entityType) => {
         return 'neoan-' + entityType + '-' + Math.random().toString(36).substring(7)

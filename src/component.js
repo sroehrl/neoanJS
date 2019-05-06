@@ -65,9 +65,7 @@ export default function Component(name, component = {}) {
     let stateArray = helper.objToFlatArray(stateObj);
 
     const slotting = function(element){
-        if(Object.keys(slots).length){
-            component.template = helper.slotEmbrace(component.template,slots);
-        }
+        component.template = helper.slotEmbrace(component.template,slots);
         addToState(component.template,true);
         element.innerHTML = component.template;
     };
@@ -87,9 +85,6 @@ export default function Component(name, component = {}) {
                 element.id = regId;
                 this.registeredIds.push(regId);
 
-                if (component.template) {
-                    slotting(element)
-                }
                 if (helper.filterTemplate(element)) {
                     proxies[element.id] = onChange(stateObj, () => {
 
@@ -108,16 +103,15 @@ export default function Component(name, component = {}) {
                 slotting(e)
             })
         }
-        if (masterTemplate) {
-            elements.forEach((e, i) => {
-                if (e.innerHTML === masterTemplate.innerHTML) {
-                    e.parentNode.removeChild(e);
-                    delete elements[i];
-                } else {
-                    e.innerHTML = masterTemplate.innerHTML;
-                }
-            });
-        }
+        // cleanup
+        elements.forEach((e, i) => {
+            if(e.hasAttribute('is-slot') || e.hasAttribute('is-template')){
+                e.parentNode.removeChild(e);
+                delete elements[i];
+            } else if(masterTemplate){
+                e.innerHTML = masterTemplate.innerHTML;
+            }
+        });
     }
 
 
