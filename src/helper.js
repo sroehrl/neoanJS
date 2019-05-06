@@ -1,7 +1,7 @@
 const Helper = function () {
     this.isFunction = (obj, key) => obj && typeof obj[key] === 'function';
     this.embrace = (template) => {
-        let matches = template.match(/{{[a-z0-9\.]+}}/im);
+        let matches = template.match(/{{[a-z0-9\.]+}}/img);
         return matches ? matches.map((m) => m.substring(2, m.length - 2)) : [];
     };
     this.slotEmbrace = (template,slots) =>{
@@ -39,7 +39,7 @@ const Helper = function () {
         return res;
     };
     this.deepFlatten = (declaration, obj) => {
-        return declaration.split('.').reduce((xs, x) => (xs && xs[x]) ? xs[x] : null, obj)
+        return declaration.split('.').reduce((xs, x) => (xs && xs[x]) ? xs[x] : '', obj)
     };
     this.compareObjects = (obj1, obj2) => {
         return Object.entries(obj1).toString() === Object.entries(obj2).toString();

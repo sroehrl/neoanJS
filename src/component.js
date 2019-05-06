@@ -19,8 +19,8 @@ export default function Component(name, component = {}) {
         },
         ...component
     };
-    const addToState = function(ele,isString=false){
-        if(!isString){
+    const addToState = function(ele,id=false){
+        if(ele instanceof HTMLElement){
             ele = ele.innerHTML;
         }
         let addToState = helper.embrace(ele);
@@ -31,21 +31,26 @@ export default function Component(name, component = {}) {
         addToState.forEach((match) => {
             if (typeof stateObj[match] === 'undefined') {
                 stateObj[match] = '';
+
+            }
+            if(id && typeof stateObjs[id][match] === 'undefined'){
+                stateObjs[id][match] = '';
             }
         });
+
     };
 
     const rendering = function () {
-        stateArray = helper.objToFlatArray(stateObj);
         if (elements) {
-            stateArray.forEach((x) => {
-                elements.forEach((element) => {
+            elements.forEach((element) => {
+                stateArrays[element.id] = helper.objToFlatArray(stateObjs[element.id]);
+                stateArrays[element.id].forEach((x)=>{
                     if (helper.filterTemplate(element)) {
-                        updateDirectives(element, helper.firstObjectKey(x), helper.deepFlatten(helper.firstObjectKey(x), stateObj));
-                        renderer.process(element, helper.firstObjectKey(x),helper.deepFlatten(helper.firstObjectKey(x), stateObj));
+                        updateDirectives(element, helper.firstObjectKey(x), helper.deepFlatten(helper.firstObjectKey(x), stateObjs[element.id]));
+                        renderer.process(element, helper.firstObjectKey(x),helper.deepFlatten(helper.firstObjectKey(x), stateObjs[element.id]));
                     }
                 })
-            });
+            })
         }
     };
     const updateDirectives = (el, n, val) => {
@@ -59,15 +64,17 @@ export default function Component(name, component = {}) {
     // .filter(k => !blocked.includes(k))
         .filter(k => helper.isFunction(configuration, k))
         .reduce((pV, cK) => ({...pV, [cK]: configuration[cK]}), {});
+    const stateObjs = {};
+    let stateArrays = {};
     const stateObj = Object.keys(configuration.data)
         .filter(k => !helper.isFunction(configuration.data, k))
         .reduce((pV, cK) => ({...pV, [cK]: configuration.data[cK]}), {});
     let stateArray = helper.objToFlatArray(stateObj);
 
-    const slotting = function(element,template){
+    const slotting = function(element,template,id=false){
 
         template = helper.slotEmbrace(template,slots);
-        addToState(template,true);
+        addToState(template,id);
         element.innerHTML = template;
     };
 
@@ -84,11 +91,12 @@ export default function Component(name, component = {}) {
                 }
                 let regId = helper.registerId(name);
                 element.id = regId;
+                stateObjs[regId] = Object.assign({}, stateObj);
+                stateArrays[regId] = stateArray;
                 this.registeredIds.push(regId);
 
                 if (helper.filterTemplate(element)) {
-                    proxies[element.id] = onChange(stateObj, () => {
-
+                    proxies[element.id] = onChange(stateObjs[element.id], () => {
                         rendering();
                         setTimeout(() => configuration.updated.call(context[element.id]));
                     });
@@ -101,7 +109,7 @@ export default function Component(name, component = {}) {
         });
         if (component.template) {
             elements.forEach((e)=>{
-                slotting(e,component.template)
+                slotting(e,component.template,e.id)
             })
         }
         // cleanup
@@ -110,7 +118,7 @@ export default function Component(name, component = {}) {
                 e.parentNode.removeChild(e);
                 delete elements[i];
             } else if(masterTemplate){
-                slotting(e,masterTemplate.innerHTML)
+                slotting(e,masterTemplate.innerHTML,e.id)
             }
         });
     }
