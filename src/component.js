@@ -85,22 +85,33 @@ export default function Component(name, component = {}) {
         addToState(template,id);
         element.innerHTML = template;
     };
+    const initiate = function(element){
+        if (element.hasAttribute('is-template')) {
+            masterTemplate = element.cloneNode(true);
+            addToState(element);
+            element.style.display = 'none';
+        }
+        if (element.hasAttribute('is-slot')) {
+            slots[element.getAttribute('is-slot')] = element.innerHTML;
+        }
+        let regId = helper.registerId(name);
+        element.id = regId;
+        stateObjs[regId] = Object.assign({}, stateObj);
+        stateArrays[regId] = stateArray;
+        return regId;
+    };
+    if (component.template) {
+        elements.forEach((e)=>{
+            slotting(e,component.template,e.id);
+        });
+
+
+    }
 
     if (elements) {
         elements.forEach((element) => {
             if (element.nodeType === 1) {
-                if (element.hasAttribute('is-template')) {
-                    masterTemplate = element.cloneNode(true);
-                    addToState(element);
-                    element.style.display = 'none';
-                }
-                if (element.hasAttribute('is-slot')) {
-                    slots[element.getAttribute('is-slot')] = element.innerHTML;
-                }
-                let regId = helper.registerId(name);
-                element.id = regId;
-                stateObjs[regId] = Object.assign({}, stateObj);
-                stateArrays[regId] = stateArray;
+                let regId = initiate(element);
                 this.registeredIds.push(regId);
 
                 if (helper.filterTemplate(element)) {
@@ -121,9 +132,16 @@ export default function Component(name, component = {}) {
 
         });
         if (component.template) {
-            elements.forEach((e)=>{
+            /*elements.forEach((e)=>{
                 slotting(e,component.template,e.id)
+            });*/
+            Object.keys(neoan.components).forEach((comp) =>{
+                if(neoan.components[comp].length<1 && document.querySelector(helper.camelToKebab(comp))){
+                    console.log(document.querySelector(helper.camelToKebab(comp)));
+                    console.log(comp);
+                }
             })
+
         }
         // cleanup
         elements.forEach((e, i) => {

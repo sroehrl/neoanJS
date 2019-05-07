@@ -46,6 +46,9 @@ const Helper = function () {
     };
     this.kebabToCamel = (str)=>{
         return str.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+    };
+    this.camelToKebab = function(str){
+        return str.replace(/[A-Z]/g,(hit)=>{return '-'+hit.toLowerCase()});
     }
 };
 const helper = new Helper();
