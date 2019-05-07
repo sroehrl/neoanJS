@@ -39,7 +39,7 @@ let loop = neoan.component('loop',{
 console.log(loop.components);
 
 neoan.component('first-element', {
-    // template: `<input type="text" data-n="some"><p>{{some}}, <span data-click="someFunction">{{another.one}}</span></p>`,
+    template: `<input type="text" data-bind="some"><p>{{some}}, <span data-click="someFunction">{{another}}</span><my-button data-click="someFunction"></my-button></p>`,
     data: {
         some: 'coolio',
         another: 'foo',

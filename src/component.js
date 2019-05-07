@@ -5,6 +5,7 @@ import directives from './directives.js';
 import renderer from './renderer.js';
 
 export default function Component(name, component = {}) {
+    neoan.configurations[helper.kebabToCamel(name)] = component;
     const blocked = ['data', 'template', 'loaded', 'updated', 'store','name'];
     const slots = {};
     const proxies = {};
@@ -94,40 +95,52 @@ export default function Component(name, component = {}) {
         if (element.hasAttribute('is-slot')) {
             slots[element.getAttribute('is-slot')] = element.innerHTML;
         }
+
+        if(element.id && element.id.indexOf('neoan-'+name) !== -1){
+            stateObjs[element.id] = Object.assign({}, stateObj);
+            stateArrays[element.id] = stateArray;
+            return ['old',element.id];
+        }
         let regId = helper.registerId(name);
         element.id = regId;
         stateObjs[regId] = Object.assign({}, stateObj);
         stateArrays[regId] = stateArray;
-        return regId;
+        return ['new',regId];
     };
     if (component.template) {
         elements.forEach((e)=>{
             slotting(e,component.template,e.id);
         });
-
-
     }
 
     if (elements) {
         elements.forEach((element) => {
             if (element.nodeType === 1) {
                 let regId = initiate(element);
-                this.registeredIds.push(regId);
+
 
                 if (helper.filterTemplate(element)) {
+
+
+
                     proxies[element.id] = onChange(stateObjs[element.id], () => {
                         rendering();
                         setTimeout(() => configuration.updated.call(context[element.id]));
                     });
                     let data = proxies[element.id];
                     context[element.id] = {...methods, name, elements, data, rendering};
+                    if(regId[0]==='new'){
+                        this.registeredIds.push(regId[1]);
+                        neoan.components[helper.kebabToCamel(name)].push({
+                            id:regId[1],
+                            data:data,
+                            ...methods
+                        });
+                    }
                     // neoan.components[helper.kebabToCamel(name)].push({...methods, name, elements, data, rendering});
-                    neoan.components[helper.kebabToCamel(name)].push({
-                        id:regId,
-                        data:data,
-                        ...methods
-                    });
+
                 }
+
             }
 
         });

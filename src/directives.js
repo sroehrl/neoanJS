@@ -11,22 +11,25 @@ const Directives = function () {
         context.data[sc] = ele.value;
     };
     const provideWithId = (el, type) => {
-        if (!el.hasAttribute('id')) {
-            el.id = helper.registerId(type);
+        if (!el.dataset.id) {
+            el.dataset.id = helper.registerId(type);
             return true;
         }
         return false;
     };
 
-    this.checkListener = function (sc, ele) {
-        if (typeof this.listeners[sc] === 'undefined') {
-            this.listeners[sc] = [];
+    this.checkListener = function (ele, type) {
+        if(!ele.dataset.id){
+            provideWithId(ele, type);
         }
-        let res = this.listeners[sc].filter((s) => {
-            return s.id === ele.id
+        if (typeof this.listeners[ele.dataset.id] === 'undefined') {
+            this.listeners[ele.dataset.id] = [];
+        }
+        let res = this.listeners[ele.dataset.id].filter((s) => {
+            return s.type === type
         }).length < 1;
         if (res) {
-            this.listeners[sc].push({id: ele.id, node: ele});
+            this.listeners[ele.dataset.id].push({type: type, node: ele});
         }
         return res;
     };
@@ -62,8 +65,8 @@ const Directives = function () {
                         ev.stopPropagation();
                         context[call].call(context);
                     };
-                    provideWithId(ele, 'click');
-                    if (this.checkListener(ele.id, ele)) {
+
+                    if (this.checkListener(ele, 'click')) {
                         ele.addEventListener('click', handler);
                     }
                 }
@@ -79,9 +82,11 @@ const Directives = function () {
                                 target[call].call(target);
                             };
                             provideWithId(ele, 'click');
-                            if (this.checkListener(ele.id, ele)) {
+                            ele.removeEventListener('click', handler);
+                            ele.addEventListener('click', handler);
+                            /*if (this.checkListener(ele.id, ele)) {
                                 ele.addEventListener('click', handler);
-                            }
+                            }*/
                         }
                     })
                 }
@@ -97,14 +102,13 @@ const Directives = function () {
                 if (value.trim() !== '') {
                     ele.value = value;
                 }
-
-                provideWithId(ele, 'input');
-                if (this.checkListener(scope, ele)) {
+                if (this.checkListener(ele, 'input')) {
                     ele.addEventListener('input', (ev) => setInputValue(scope, ele, context));
                     ele.addEventListener('change', (ev) => {
                         ele.value = context.data[scope];
                     });
                 }
+
             }
         });
     };
