@@ -129,7 +129,7 @@ export default function Component(name, component = {}) {
                         setTimeout(() => configuration.updated.call(context[element.id]));
                     });
                     let data = proxies[element.id];
-                    context[element.id] = {...methods, name, elements, data, rendering};
+                    context[element.id] = {...methods, name, element, data, rendering};
                     if(regId[0]==='new'){
                         this.registeredIds.push(regId[1]);
                         neoan.components[helper.kebabToCamel(name)].push({
@@ -138,25 +138,13 @@ export default function Component(name, component = {}) {
                             ...methods
                         });
                     }
-                    // neoan.components[helper.kebabToCamel(name)].push({...methods, name, elements, data, rendering});
 
                 }
 
             }
 
         });
-        if (component.template) {
-            /*elements.forEach((e)=>{
-                slotting(e,component.template,e.id)
-            });*/
-            Object.keys(neoan.components).forEach((comp) =>{
-                if(neoan.components[comp].length<1 && document.querySelector(helper.camelToKebab(comp))){
-                    console.log(document.querySelector(helper.camelToKebab(comp)));
-                    console.log(comp);
-                }
-            })
 
-        }
         // cleanup
         elements.forEach((e, i) => {
             if(e.hasAttribute('is-slot') || e.hasAttribute('is-template')){

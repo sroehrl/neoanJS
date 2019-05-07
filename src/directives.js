@@ -48,7 +48,7 @@ const Directives = function () {
                 return e.id === ele.id
             });
             if (candidate.length > 0) {
-                candidate[0].data._parent = helper.deepFlatten(ele.dataset.provide, context.data)
+                candidate[0].data._provided = helper.deepFlatten(ele.dataset.provide, context.data)
             }
         });
     };
