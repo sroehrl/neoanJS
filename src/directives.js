@@ -61,13 +61,18 @@ const Directives = function () {
                 call = helper.kebabToCamel(context.name + '-' + rawCall.join('-'));
                 if (typeof context[call] !== 'undefined') {
                     let handler = (ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        context[call].call(context);
+                        if(ev.target.dataset.id === ele.dataset.id || ev.target.parentNode.dataset.id === ele.dataset.id){
+                            console.log(ev.target);
+                            ev.preventDefault();
+                            ev.stopPropagation();
+
+                            context[call].call(context);
+                        }
+
                     };
 
                     if (this.checkListener(ele, 'click')) {
-                        ele.addEventListener('click', handler);
+                        document.addEventListener('click', handler);
                     }
                 }
             } else {
@@ -81,12 +86,10 @@ const Directives = function () {
                                 ev.stopPropagation();
                                 target[call].call(target);
                             };
-                            provideWithId(ele, 'click');
-                            ele.removeEventListener('click', handler);
-                            ele.addEventListener('click', handler);
-                            /*if (this.checkListener(ele.id, ele)) {
+                            if (this.checkListener(ele, 'click')) {
                                 ele.addEventListener('click', handler);
-                            }*/
+                            }
+
                         }
                     })
                 }

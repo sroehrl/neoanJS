@@ -11,7 +11,6 @@ const Neoan =  function() {
         return this;
     };
     this.cycle = function(){
-        console.log(this.components);
         Object.keys(this.components).forEach((comp)=>{
             let rerender = false, tagName = helper.camelToKebab(comp);
             document.querySelectorAll(tagName).forEach((element)=>{

@@ -7,10 +7,10 @@ const Renderer = function(){
             bindings[s] = [];
         }
         let currentNode = null, nodes = [], binder = `{{${s}}}`;
-        bindings[s].forEach((clone) => {
-            let cNode = el.querySelector('[data-id="' + clone.dataset.id + '"]');
-            if (cNode !== null) {
-                cNode.innerHTML = clone.innerHTML.replace(new RegExp(binder, 'g'), v);
+        bindings[s].forEach((binding) => {
+            let cNode = el.querySelector('[data-id="' + binding.clone.dataset.id + '"]');
+            if (cNode !== null && binding.oldVal !== v) {
+                cNode.innerHTML = binding.clone.innerHTML.replace(new RegExp(binder, 'g'), v);
             }
         });
         let xpath = "//*[contains(text(),'" + binder + "')]";
@@ -19,8 +19,12 @@ const Renderer = function(){
             nodes.push(currentNode);
         }
         nodes.forEach((applyNode) => {
-            applyNode.dataset.id = helper.registerId('bind');
-            bindings[s].push(applyNode.cloneNode(true));
+            if(!applyNode.dataset.id){
+                applyNode.dataset.id = helper.registerId('bind');
+            } else {
+                console.warn('NeoanJS: Reflow-warning. Consider wrapping {{'+s+'}} in an element (@'+el.tagName+')')
+            }
+            bindings[s].push({oldVal:v,clone:applyNode.cloneNode(true)});
             applyNode.innerHTML = applyNode.innerHTML.replace(new RegExp(binder, 'g'), v);
         });
     }

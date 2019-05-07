@@ -12,10 +12,8 @@ let comp = neoan.component('my-button', {
         setTimeout(()=>this.data.update = true,1000);
     },
     updated(){
-        console.log(this.data._parent);
     }
 }).components;
-console.log(comp);
 
 let loop = neoan.component('loop',{
     template: `<ul data-for="iterates">
@@ -36,10 +34,9 @@ let loop = neoan.component('loop',{
         this.data.iterates.push({bu:'item-'+Math.random().toString(36).substring(7)});
     }
 });
-console.log(loop.components);
 
 neoan.component('first-element', {
-    template: `<input type="text" data-bind="some"><p>{{some}}, <span data-click="someFunction">{{another}}</span><my-button data-click="someFunction"></my-button></p>`,
+    template: `<input type="text" data-bind="some"><p><span>{{some}}</span>, <span data-click="someFunction">{{another}}</span><my-button data-click="someFunction"></my-button></p>`,
     data: {
         some: 'coolio',
         another: 'foo',

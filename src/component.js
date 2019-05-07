@@ -55,6 +55,7 @@ export default function Component(name, component = {}) {
                 stateArrays[element.id] = helper.objToFlatArray(stateObjs[element.id]);
                 stateArrays[element.id].forEach((x)=>{
                     if (helper.filterTemplate(element)) {
+                        // important: directives before redrawing!
                         updateDirectives(element, helper.firstObjectKey(x), helper.deepFlatten(helper.firstObjectKey(x), stateObjs[element.id]));
                         renderer.process(element, helper.firstObjectKey(x),helper.deepFlatten(helper.firstObjectKey(x), stateObjs[element.id]));
                     }
