@@ -7,7 +7,8 @@ const Directives = function () {
     this.listeners = {};
     this.dirty = {};
     this._memory = {
-        for:{}
+        for:{},
+        click:{}
     };
 
     const setInputValue = (sc, ele, context) => {
@@ -57,7 +58,42 @@ const Directives = function () {
     };
     this.directiveClick = (element, scope, value, context) => {
         elementIterator(element, '[data-click]').forEach((ele) => {
-            let rawCall = ele.dataset.click.split(':');
+            if(typeof ele.dataset.id !== 'undefined' &&typeof this._memory.click[ele.dataset.id] === 'undefined'){
+                this._memory.click[ele.dataset.id] = {};
+            }
+            console.log(this._memory.click);
+            let rawCall = ele.dataset.click.split('->');
+            let passIns = [];
+            rawCall[rawCall.length-1] = rawCall[rawCall.length-1].replace(/\([^)]+\)/,(hit)=>{
+                passIns = hit.substring(1,hit.length-1).split(',');
+               return '';
+            });
+            if(passIns.filter((arg)=>{
+                return arg.indexOf('{{') === -1 && arg.indexOf('$') === -1
+            }).length === 1 && typeof this._memory.click[ele.dataset.id] !== 'undefined'){
+                let v;
+                try{
+                    v = eval('('+passIns+')');
+                } catch (e) {
+                    v = passIns;
+                }
+                this._memory.click[ele.dataset.id].passIns = v;
+                /*console.log(eval('('+passIns+')'));
+                passIns.forEach((arg,key)=>{
+                    console.log(eval('('+arg+')'));
+                    if(!isNaN(key)){
+                        let ins = {};
+                        ins[key] = arg[key];
+                        this._memory.click[ele.dataset.id].passIns.push(ins)
+                    } else {
+                        this._memory.click[ele.dataset.id].passIns.push(eval(arg))
+                    }
+
+                });
+                // this._memory.click[ele.dataset.id].passIns = [...passIns];
+                console.log(this._memory.click[ele.dataset.id].passIns);*/
+            }
+
             let call = '';
             if (rawCall.length < 2) {
                 call = helper.kebabToCamel(context.name + '-' + rawCall.join('-'));
@@ -67,6 +103,7 @@ const Directives = function () {
                             ev.preventDefault();
                             ev.stopPropagation();
                             context.event = ev;
+                            context.args = this._memory.click[ele.dataset.id].passIns;
                             context[call].call(context);
                         }
 
@@ -86,6 +123,7 @@ const Directives = function () {
                                 ev.preventDefault();
                                 ev.stopPropagation();
                                 target.event = ev;
+                                context.arg = passIns;
                                 target[call].call(target);
                             };
                             if (this.checkListener(ele, 'click')) {
