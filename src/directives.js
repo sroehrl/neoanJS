@@ -66,6 +66,7 @@ const Directives = function () {
                         if(ev.target.dataset.id === ele.dataset.id || ev.target.parentNode.dataset.id === ele.dataset.id){
                             ev.preventDefault();
                             ev.stopPropagation();
+                            context.event = ev;
                             context[call].call(context);
                         }
 
@@ -84,6 +85,7 @@ const Directives = function () {
                             let handler = (ev) => {
                                 ev.preventDefault();
                                 ev.stopPropagation();
+                                target.event = ev;
                                 target[call].call(target);
                             };
                             if (this.checkListener(ele, 'click')) {
@@ -141,7 +143,7 @@ const Directives = function () {
                             let arr = hit.substring(2,hit.length-2).split('.');
                             arr.shift();
                             return '{{'+iterator.dataset.for+'.'+i+'.'+arr.join('.') +'}}';
-                        }).trim();
+                        }).trim().replace('$i',i);
                     node.content.firstChild.dataset.id = item.__bound;
                     iterator.append(node.content.firstChild);
                 } else {

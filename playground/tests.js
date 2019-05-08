@@ -17,7 +17,7 @@ let comp = neoan.component('my-button', {
 
 let loop = neoan.component('loop',{
     template: `<ul data-for="iterates">
-            <li>{{iterate.bu}}</li>
+            <li><span>{{iterate.bu}}</span><button data-click="remove($i)">delete</button></li>
         </ul><button data-click="add">{{other}}</button><button data-click="delete">x</button><span>{{deeper.value}}</span>`,
     data:{
         iterates: [{bu:'test'},{bu:'second'}],
@@ -26,12 +26,25 @@ let loop = neoan.component('loop',{
             value:'aha'
         }
     },
+    loaded(){
+        console.log(this.data);
+    },
     updated(){
 
     },
+    remove(){
+        let neoanPath = [];
+        this.event.path.forEach((e)=>{
+            if(e instanceof HTMLElement &&e.dataset.id){
+                neoanPath.push(e);
+            }
+        });
+        console.log(neoanPath);
+    },
     delete(){
-        this.data.iterates.splice(this.data.iterates.length-1,1);
-        this.rendering();
+        this.data.iterates.pop();
+        // this.data.iterates.splice(this.data.iterates.length-1,1);
+        // this.rendering();
     },
     add(){
         this.data.iterates.push({bu:'item-'+Math.random().toString(36).substring(7)});
