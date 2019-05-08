@@ -6,6 +6,9 @@ const Directives = function () {
     this.registeredDirectives = ['Input', 'Click', 'For', 'Provide'];
     this.listeners = {};
     this.dirty = {};
+    this._memory = {
+        for:{}
+    };
 
     const setInputValue = (sc, ele, context) => {
         context.data[sc] = ele.value;
@@ -54,7 +57,6 @@ const Directives = function () {
     };
     this.directiveClick = (element, scope, value, context) => {
         elementIterator(element, '[data-click]').forEach((ele) => {
-
             let rawCall = ele.dataset.click.split(':');
             let call = '';
             if (rawCall.length < 2) {
@@ -62,10 +64,8 @@ const Directives = function () {
                 if (typeof context[call] !== 'undefined') {
                     let handler = (ev) => {
                         if(ev.target.dataset.id === ele.dataset.id || ev.target.parentNode.dataset.id === ele.dataset.id){
-                            console.log(ev.target);
                             ev.preventDefault();
                             ev.stopPropagation();
-
                             context[call].call(context);
                         }
 
@@ -117,78 +117,67 @@ const Directives = function () {
     };
     this.directiveFor = (element, scope, value, context) => {
         elementIterator(element, '[data-for]').forEach((iterator) => {
-            // dirty-check
-            // initial
-            let initial = typeof this.dirty[iterator.dataset.for] === 'undefined';
-            if (initial) {
-                this.dirty[iterator.dataset.for] = {
-                    node: iterator,
-                    template: iterator.innerHTML,
-                    data: context.data[iterator.dataset.for],
-                    dirtyCheck: []
+
+            // generate
+            if(typeof this._memory.for[iterator.dataset.for] === 'undefined'){
+                this._memory.for[iterator.dataset.for] = {
+                    template:iterator.innerHTML,
+                    bindings:[]
                 };
-                this.dirty[iterator.dataset.for].data.forEach((item, i) => {
-                    this.dirty[iterator.dataset.for].dirtyCheck[i] = {
-                        id: helper.registerId('item-' + i),
-                        content: Object.assign({}, item)
-                    };
-                });
-                // remove
                 Array.from(iterator.children).forEach((child) => {
                     iterator.removeChild(child);
                 });
             }
-            // generate
-            let flats = helper.embrace(this.dirty[iterator.dataset.for].template);
-            flats.forEach((declaration) => {
-                let dec = declaration.substring(declaration.indexOf('.') + 1);
-                let end = dec.split('.').pop();
-                this.dirty[iterator.dataset.for].data.forEach((item, i) => {
-                    if (typeof this.dirty[iterator.dataset.for].dirtyCheck[i] === 'undefined') {
-                        initial = true;
-                        this.dirty[iterator.dataset.for].dirtyCheck[i] = {
-                            id: helper.registerId('item-' + i),
-                            content: Object.assign({}, item)
-                        };
-                    }
-                    let unChanged = helper.compareObjects(
-                        this.dirty[iterator.dataset.for].dirtyCheck[i].content,
-                        Object.assign({}, item));
 
-                    if (initial || !unChanged) {
-                        if (!unChanged) {
-                            elementIterator(iterator, '[data-item-id="' + this.dirty[iterator.dataset.for].dirtyCheck[i].id + '"]').forEach((child) => {
-                                iterator.removeChild(child);
-                            })
+            context.data[iterator.dataset.for].forEach((item, i) => {
+                // is bound|used?
+                if(typeof item.__bound === 'undefined'){
+                    //new
+                    item.__bound = helper.registerId('item');
+                    this._memory.for[iterator.dataset.for].bindings.push(Object.assign({},item));
+                    let node = document.createElement('template');
+                    node.innerHTML = this._memory.for[iterator.dataset.for].template
+                        .replace(/{{[a-zA-Z0-9]+\.[a-zA-Z0-9.]+}}/g, (hit)=>{
+                            let arr = hit.substring(2,hit.length-2).split('.');
+                            arr.shift();
+                            return '{{'+iterator.dataset.for+'.'+i+'.'+arr.join('.') +'}}';
+                        }).trim();
+                    node.content.firstChild.dataset.id = item.__bound;
+                    iterator.append(node.content.firstChild);
+                } else {
+                    // changed?
+                    if(this._memory.for[iterator.dataset.for].bindings.filter((old)=>{
+                        return old.__bound === item.__bound && helper.compareObjects(old,Object.assign({},item))
+                    }).length !== 1){
+                        document.querySelector('[data-id="'+item.__bound+'"]').innerHTML =
+                            this._memory.for[iterator.dataset.for].template
+                                .replace(/{{[a-zA-Z0-9]+\.[a-zA-Z0-9.]+}}/g, (hit)=>{
+                                    let arr = hit.substring(2,hit.length-2).split('.');
+                                    arr.shift();
+                                    return '{{'+iterator.dataset.for+'.'+i+'.'+arr.join('.') +'}}';
+                                }).trim();
 
-                        }
-                        this.dirty[iterator.dataset.for].dirtyCheck[i].content = Object.assign({}, item);
-                        let between = dec.substring(0, dec.length - end.length - 1);
-                        let finalDec = between + (between.length > 0 ? '.' : '') + i + '.' + end;
-                        let val = helper.deepFlatten(
-                            finalDec,
-                            this.dirty[iterator.dataset.for].data);
-                        let node = document.createRange().createContextualFragment(this.dirty[iterator.dataset.for].template
-                            .replace('{{' + declaration + '}}', val));
-
-                        iterator.append(node);
-                        Array.from(iterator.children).forEach((child, k) => {
-                            if (k === Array.from(iterator.children).length - 1) {
-                                child.dataset.itemId = this.dirty[iterator.dataset.for].dirtyCheck[i].id;
-                            }
-                            if (k > i) {
-                                iterator.removeChild(child);
-                                delete this.dirty[iterator.dataset.for].dirtyCheck[i];
-                            }
-                        });
                     }
 
-                });
+                }
+            });
+            // needs removal?
+            if(this._memory.for[iterator.dataset.for].bindings.length>context.data[iterator.dataset.for].length){
+                this._memory.for[iterator.dataset.for].bindings.forEach((target,i)=>{
+                    if(context.data[iterator.dataset.for].filter((live)=>{
+                        return live.__bound === target.__bound
+                    }).length<1){
+                        this._memory.for[iterator.dataset.for].bindings.splice(i,1);
+                        let child = document.querySelector('[data-id="'+target.__bound+'"]');
+                        child.parentNode.removeChild(child);
+                    }
+
+                })
+            }
 
 
-            })
 
-        });
+        })
     }
 };
 const directives = new Directives();

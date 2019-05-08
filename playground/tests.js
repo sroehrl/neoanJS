@@ -18,16 +18,19 @@ let comp = neoan.component('my-button', {
 let loop = neoan.component('loop',{
     template: `<ul data-for="iterates">
             <li>{{iterate.bu}}</li>
-        </ul><button data-click="add">{{other}}</button><button data-click="delete">x</button>`,
+        </ul><button data-click="add">{{other}}</button><button data-click="delete">x</button><span>{{deeper.value}}</span>`,
     data:{
         iterates: [{bu:'test'},{bu:'second'}],
-        other:'add'
+        other:'add',
+        deeper:{
+            value:'aha'
+        }
     },
     updated(){
 
     },
     delete(){
-        this.data.iterates.splice(this.data.iterates.length-2,1);
+        this.data.iterates.splice(this.data.iterates.length-1,1);
         this.rendering();
     },
     add(){
