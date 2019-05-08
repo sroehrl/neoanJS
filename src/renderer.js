@@ -12,6 +12,7 @@ const Renderer = function(){
             if (cNode !== null && binding.oldVal !== v) {
                 cNode.innerHTML = binding.clone.innerHTML.replace(new RegExp(binder, 'g'), v);
             }
+            binding.oldVal = v
         });
         let xpath = "//*[contains(text(),'" + binder + "')]";
         let find = document.evaluate(xpath, el, null, XPathResult.ANY_TYPE, null);

@@ -39,7 +39,7 @@ let loop = neoan.component('loop',{
 });
 
 neoan.component('first-element', {
-    template: `<input type="text" data-bind="some"><p><span>{{some}}</span>, <span data-click="someFunction">{{another}}</span><my-button data-click="someFunction"></my-button></p>`,
+    template: `<input type="text" data-bind="some"><p><span>{{some}}</span>, <div data-click="someFunction"><span>{{another}}</span></div><my-button data-click="someFunction"></my-button></p>`,
     data: {
         some: 'coolio',
         another: 'foo',
@@ -56,6 +56,7 @@ neoan.component('first-element', {
     someFunction() {
         this.data.some = 'changed';
         this.data.another = this.data.another === 'bar' ? 'foo' :'bar';
+        console.log(this.data.another);
     }
 });
 
