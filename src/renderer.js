@@ -14,11 +14,23 @@ const Renderer = function(){
             }
             binding.oldVal = v
         });
-        let xpath = "//*[contains(text(),'" + binder + "')]";
-        let find = document.evaluate(xpath, el, null, XPathResult.ANY_TYPE, null);
+        // get bindings in text
+        let pathInner = "//*[contains(text(),'" + binder + "')]";
+        let find = document.evaluate(pathInner, el, null, XPathResult.ANY_TYPE, null);
         while (currentNode = find.iterateNext()) {
             nodes.push(currentNode);
         }
+        // get bindings in attributes
+        let potential = ['href'];
+        potential.forEach((selector)=>{
+            let pathAttribute = "//"+el.nodeName.toLowerCase()+"//*[@"+selector+"='"+binder+"']";
+            find = document.evaluate(pathAttribute, el, null, XPathResult.ANY_TYPE, null);
+            while (currentNode = find.iterateNext()) {
+                nodes.push(currentNode);
+            }
+        });
+
+
         nodes.forEach((applyNode) => {
             if(!applyNode.dataset.id){
                 applyNode.dataset.id = helper.registerId('bind');
