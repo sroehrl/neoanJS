@@ -170,7 +170,7 @@ const Directives = function () {
     };
     this.directiveInput = (element, scope, value, context) => {
         elementIterator(element, '[data-bind="' + scope + '"]').forEach((ele) => {
-            if (ele.nodeName === 'INPUT' || ele.nodeName === 'TEXTAREA') {
+            if (ele.nodeName === 'INPUT' || ele.nodeName === 'TEXTAREA' || ele.nodeName === 'SELECT') {
                 if (value.trim() !== '') {
                     ele.value = value;
                 }
