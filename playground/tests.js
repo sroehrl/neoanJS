@@ -1,4 +1,4 @@
-import neoan from '../src/neoan.js';
+import neoan from '../src/@neoan/neoan/neoan.js';
 
 
 let comp = neoan.component('my-button', {
