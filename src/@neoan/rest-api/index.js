@@ -4,6 +4,7 @@ let localStorage = window.localStorage;
 
 neoan.service('rest-api',{
     token:localStorage.getItem('token'),
+    base:'',
     setToken(token){
         if(token){
             localStorage.setItem('token',token);
@@ -12,6 +13,9 @@ neoan.service('rest-api',{
             this.token = null;
             localStorage.removeItem('token');
         }
+    },
+    setBase(url){
+        this.base = url;
     },
     createHeader(){
         let header = {
@@ -23,7 +27,7 @@ neoan.service('rest-api',{
         return new Headers(header);
     },
     post(endpoint,body){
-        return fetch('{{base}}api.v1/'+endpoint,{
+        return fetch(this.base+endpoint,{
             method:'POST',
             headers:this.createHeader(),
             body:JSON.stringify(body)
@@ -39,14 +43,14 @@ neoan.service('rest-api',{
             });
         }
         endpoint += string.substring(0,string.length-1);
-        return fetch('{{base}}api.v1/'+endpoint,{
+        return fetch(this.base+endpoint,{
             headers:this.createHeader()
         }).then((header)=>{
             return header.json();
         })
     },
     delete(endpoint,body){
-        return fetch('{{base}}api.v1/'+endpoint,{
+        return fetch(this.base+endpoint,{
             method:'DELETE',
             headers:this.createHeader(),
             body:JSON.stringify(body)
