@@ -1,15 +1,16 @@
 import helper from "./helper.js";
-import rerenderer from './renderer.js';
 import neoan from './neoan.js';
+import renderer from "./renderer.js";
 
 const Directives = function () {
-    this.registeredDirectives = ['Input', 'Click', 'For', 'Provide','Show','Hide'];
+    this.registeredDirectives = ['Input', 'Click', 'For', 'Provide','Show','Hide','Src'];
     this.listeners = {};
     this.dirty = {};
     this._memory = {
         for: {},
         click: {},
-        if: {}
+        if: {},
+        src: {}
     };
 
     const setInputValue = (sc, ele, context) => {
@@ -45,6 +46,12 @@ const Directives = function () {
     this.binder = (element, scope, value, context) => {
         this.registeredDirectives.forEach((dir) => {
             this['directive' + dir](element, scope, value, context);
+        });
+        // renderer.process(element,scope,value);
+    };
+    this.directiveSrc = (element, scope, value, context) =>{
+        elementIterator(element, '[data-src="' + scope + '"]').forEach((ele) => {
+            ele.src = value;
         })
     };
     this.directiveShow = (element, scope, value, context) => {
@@ -66,7 +73,6 @@ const Directives = function () {
             if(typeof this._memory.if[ele.dataset.hide] === 'undefined'){
                 this._memory.if[ele.dataset.hide] = ele;
             }
-
             if(context.data[ele.dataset.hide]){
 
                 ele.style.display = 'none';
@@ -82,7 +88,9 @@ const Directives = function () {
                 return e.id === ele.id
             });
             if (candidate.length > 0) {
-                candidate[0].data._provided = helper.deepFlatten(ele.dataset.provide, context.data)
+                console.log(ele.dataset.provide.replace(/({{)|(}})/g,''));
+                console.log(context.data);
+                candidate[0].data._provided = helper.deepFlatten(ele.dataset.provide.replace(/({{)|(}})/g,''), context.data)
             }
         });
     };
@@ -99,13 +107,15 @@ const Directives = function () {
             });
             if (passIns.filter((arg) => {
                 return arg.indexOf('{{') === -1 && arg.indexOf('$') === -1
-            }).length === 1 && typeof this._memory.click[ele.dataset.id] !== 'undefined') {
+            }).length >0 && typeof this._memory.click[ele.dataset.id] !== 'undefined') {
+                passIns = passIns.join(',');
                 let v;
                 try {
                     v = eval('(' + passIns + ')');
                 } catch (e) {
                     v = passIns;
                 }
+
                 this._memory.click[ele.dataset.id].passIns = v;
                 /*console.log(eval('('+passIns+')'));
                 passIns.forEach((arg,key)=>{
@@ -129,6 +139,7 @@ const Directives = function () {
                 if (typeof context[call] !== 'undefined') {
                     let handler = (ev) => {
                         if (ev.target.dataset.id === ele.dataset.id || ev.target.parentNode.dataset.id === ele.dataset.id) {
+                            console.log(this._memory.click[ele.dataset.id].passIns);
                             ev.preventDefault();
                             ev.stopPropagation();
                             context.event = ev;
@@ -186,11 +197,15 @@ const Directives = function () {
     };
     this.directiveFor = (element, scope, value, context) => {
         elementIterator(element, '[data-for]').forEach((iterator) => {
+            // element not owner or destructed?
+            if(typeof context.data[iterator.dataset.for] === 'undefined'){
+                return;
+            }
 
             // generate
-            if (typeof this._memory.for[iterator.dataset.for+element.id] === 'undefined') {
-                this._memory.for[iterator.dataset.for+element.id] = {
-                    template: iterator.innerHTML.replace(/id="[a-z0-9\-]+"/,''),
+            if (typeof this._memory.for[iterator.dataset.for] === 'undefined') {
+                this._memory.for[iterator.dataset.for] = {
+                    template: iterator.innerHTML.replace(/id="[a-z0-9\-]+"/g,''),
                     bindings: []
                 };
                 Array.from(iterator.children).forEach((child) => {
@@ -203,29 +218,31 @@ const Directives = function () {
                 if (typeof item.__bound === 'undefined') {
                     //new
                     item.__bound = helper.registerId('item');
-                    this._memory.for[iterator.dataset.for+element.id].bindings.push(Object.assign({}, item));
+                    this._memory.for[iterator.dataset.for].bindings.push(Object.assign({}, item));
                     let node = document.createElement('template');
-                    node.innerHTML = this._memory.for[iterator.dataset.for+element.id].template
+                    node.innerHTML = this._memory.for[iterator.dataset.for].template
                         .replace(/{{[a-zA-Z0-9]+\.[a-zA-Z0-9.]+}}/g, (hit) => {
                             let arr = hit.substring(2, hit.length - 2).split('.');
                             arr.shift();
                             return '{{' + iterator.dataset.for + '.' + i + '.' + arr.join('.') + '}}';
-                        }).trim().replace('$i', i);
+                        }).trim().replace(/\$i/g, i);
                     node.content.firstChild.dataset.id = item.__bound;
                     iterator.append(node.content.firstChild);
                 } else {
                     // changed?
-                    if (this._memory.for[iterator.dataset.for+element.id].bindings.filter((old) => {
+                    if (this._memory.for[iterator.dataset.for].bindings.filter((old) => {
                         return old.__bound === item.__bound && helper.compareObjects(old, Object.assign({}, item))
                     }).length !== 1) {
                         let targetElement = document.querySelector('[data-id="' + item.__bound + '"]');
+                        if(targetElement){
                             targetElement.innerHTML =
-                                this._memory.for[iterator.dataset.for+element.id].template
+                                this._memory.for[iterator.dataset.for].template
                                     .replace(/{{[a-zA-Z0-9]+\.[a-zA-Z0-9.]+}}/g, (hit) => {
                                         let arr = hit.substring(2, hit.length - 2).split('.');
                                         arr.shift();
                                         return '{{' + iterator.dataset.for + '.' + i + '.' + arr.join('.') + '}}';
                                     }).trim();
+                        }
 
 
                     }
@@ -233,12 +250,12 @@ const Directives = function () {
                 }
             });
             // needs removal?
-            if (this._memory.for[iterator.dataset.for+element.id].bindings.length > context.data[iterator.dataset.for].length) {
-                this._memory.for[iterator.dataset.for+element.id].bindings.forEach((target, i) => {
+            if (this._memory.for[iterator.dataset.for].bindings.length > context.data[iterator.dataset.for].length) {
+                this._memory.for[iterator.dataset.for].bindings.forEach((target, i) => {
                     if (context.data[iterator.dataset.for].filter((live) => {
                         return live.__bound === target.__bound
                     }).length < 1) {
-                        this._memory.for[iterator.dataset.for+element.id].bindings.splice(i, 1);
+                        this._memory.for[iterator.dataset.for].bindings.splice(i, 1);
                         let child = document.querySelector('[data-id="' + target.__bound + '"]');
                         child.parentNode.removeChild(child);
                     }

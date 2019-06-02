@@ -6,7 +6,7 @@ const Helper = function () {
     };
     this.slotEmbrace = (template,slots) =>{
         return  template.replace(/\[\[[a-z0-9\.]+\]\]/img, (hit)=>{
-            return slots[hit.substring(2,hit.length-2)] || ''
+            return slots[hit.substring(2,hit.length-2)] || hit
         });
     };
     this.computeState = (key, fn) => state => state[key] = fn({...state});
